@@ -21,12 +21,19 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-const posts = [];
+const postSchema = {
+  title: String,
+  content: String,
+};
+
+const Post = mongoose.model("Post", postSchema);
 
 app.get("/", function (req, res) {
-  res.render("home", {
-    homeStartingContent: homeStartingContent,
-    posts: posts,
+  Post.find({}, (err, posts) => {
+    res.render("home", {
+      homeStartingContent: homeStartingContent,
+      posts: posts,
+    });
   });
 });
 
@@ -57,20 +64,14 @@ app.get("/posts/:postName", function (req, res) {
   });
 });
 
-const postSchema = {
-  title: String,
-  content: String,
-};
-
-const Post = mongoose.model("Post", postSchema);
-
 app.post("/compose", function (req, res) {
   const post = new Post({
     title: req.body.postTitle,
     content: req.body.postBody,
   });
-  post.save();
-  res.redirect("/");
+  post.save((err) => {
+    if (!err) res.redirect("/");
+  });
 });
 app.listen(3000, function () {
   console.log("Server started on port 3000");
